@@ -149,5 +149,34 @@ def cadastrar_offer():
     return jsonify({"mensagem": "Usuário buscador cadastrado com sucesso."}), 201
 
 
+@app.route("/atualizar_seacher", methods=["PUT"])
+def atualizar_seacher():
+    # Capturamos os dados enviados na requisição em formato JSON
+    dados = request.get_json()
+
+    # Extraímos as informações do JSON recebido
+    nome = dados.get("nome")  
+    sobrenome = dados.get("sobrenome")  
+    data_nascimento = dados.get("data_nascimento")  
+    email = dados.get("email")
+    telefone = dados.get("telefone")  
+    senha = dados.get("senha")  
+
+    with sqlite3.connect("database.db") as conn:
+        conn.execute(f"""
+        UPDATE USERSEACHER SET 
+        nome = "{nome}",
+        sobrenome = "{sobrenome}",
+        data_nascimento = "{data_nascimento}",
+        telefone = "{telefone}",
+        senha = "{senha}"
+        WHERE email = "{email}"
+        """)
+
+    conn.commit()
+
+    return jsonify({"mensagem": "Usuário buscador alterado com sucesso."}), 201
+
+
 if __name__ == "__main__":
     app.run(debug=True)
