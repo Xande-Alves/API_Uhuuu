@@ -184,5 +184,23 @@ def atualizar_seacher():
         return jsonify({"erro": str(e)}), 500
 
 
+@app.route("/deletar_seacher", methods=["DELETE"])
+def deletar_seacher():
+    # Capturamos os dados enviados na requisição em formato JSON
+    dados = request.get_json()
+
+    # Extraímos as informações do JSON recebido  
+    email = dados.get("email")  
+
+    try:
+        with sqlite3.connect("database.db") as conn:
+            conn.execute("DELETE FROM USERSEACHER WHERE email = ?", (email,))
+            conn.commit()
+        return jsonify({"mensagem": "Usuário buscador deletado com sucesso."}), 200
+    except Exception as e:
+        return jsonify({"erro": str(e)}), 500
+
+    
+
 if __name__ == "__main__":
     app.run(debug=True)
