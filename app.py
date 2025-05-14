@@ -211,7 +211,7 @@ def deletar_offer():
 
     try:
         with sqlite3.connect("database.db") as conn:
-            conn.execute("DELETE FROM USERSEACHER WHERE email = ?", (email,))
+            conn.execute("DELETE FROM USERSOFFER WHERE email = ?", (email,))
             conn.commit()
         return jsonify({"mensagem": "Usuário buscador deletado com sucesso."}), 200
     except Exception as e:
