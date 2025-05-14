@@ -151,31 +151,37 @@ def cadastrar_offer():
 
 @app.route("/atualizar_seacher", methods=["PUT"])
 def atualizar_seacher():
-    # Capturamos os dados enviados na requisição em formato JSON
     dados = request.get_json()
-
-    # Extraímos as informações do JSON recebido
     nome = dados.get("nome")  
     sobrenome = dados.get("sobrenome")  
     data_nascimento = dados.get("data_nascimento")  
     email = dados.get("email")
     telefone = dados.get("telefone")  
-    senha = dados.get("senha")  
+    senha = dados.get("senha")  # pode ser None ou ""
 
-    with sqlite3.connect("database.db") as conn:
-        conn.execute(f"""
-        UPDATE USERSEACHER SET 
-        nome = "{nome}",
-        sobrenome = "{sobrenome}",
-        data_nascimento = "{data_nascimento}",
-        telefone = "{telefone}",
-        senha = "{senha}"
-        WHERE email = "{email}"
-        """)
+    query_base = """
+    UPDATE USERSEACHER SET 
+        nome = ?, 
+        sobrenome = ?, 
+        data_nascimento = ?, 
+        telefone = ?
+    """
+    params = [nome, sobrenome, data_nascimento, telefone]
 
-    conn.commit()
+    if senha:  # Só atualiza se a senha estiver presente e não vazia
+        query_base += ", senha = ?"
+        params.append(senha)
 
-    return jsonify({"mensagem": "Usuário buscador alterado com sucesso."}), 201
+    query_base += " WHERE email = ?"
+    params.append(email)
+
+    try:
+        with sqlite3.connect("database.db") as conn:
+            conn.execute(query_base, params)
+            conn.commit()
+        return jsonify({"mensagem": "Usuário buscador alterado com sucesso."}), 201
+    except Exception as e:
+        return jsonify({"erro": str(e)}), 500
 
 
 if __name__ == "__main__":
