@@ -152,6 +152,8 @@ def cadastrar_offer():
 @app.route("/atualizar_seacher", methods=["PUT"])
 def atualizar_seacher():
     dados = request.get_json()
+
+    # Extraímos as informações do JSON recebido
     nome = dados.get("nome")  
     sobrenome = dados.get("sobrenome")  
     data_nascimento = dados.get("data_nascimento")  
@@ -179,7 +181,52 @@ def atualizar_seacher():
         with sqlite3.connect("database.db") as conn:
             conn.execute(query_base, params)
             conn.commit()
-        return jsonify({"mensagem": "Usuário buscador alterado com sucesso."}), 201
+        return jsonify({"mensagem": "Usuário buscador alterado com sucesso."}), 200
+    except Exception as e:
+        return jsonify({"erro": str(e)}), 500
+
+
+@app.route("/atualizar_offer", methods=["PUT"])
+def atualizar_offer():
+    dados = request.get_json()
+
+    # Extraímos as informações do JSON recebido
+    nome = dados.get("nome")  
+    logradouro = dados.get("logradouro")  
+    numero = dados.get("numero")  
+    complemento = dados.get("complemento")
+    bairro = dados.get("bairro")  
+    cidade = dados.get("cidade") 
+    estado = dados.get("estado")  
+    email = dados.get("email")
+    telefone = dados.get("telefone")  
+    senha = dados.get("senha") # pode ser None ou ""
+
+    query_base = """
+    UPDATE USEROFFER SET 
+        nome = ?, 
+        logradouro = ?, 
+        numero = ?, 
+        complemento = ?,
+        bairro = ?, 
+        cidade = ?, 
+        estado = ?, 
+        telefone = ?
+    """
+    params = [nome, logradouro, numero, complemento, bairro, cidade, estado, telefone]
+
+    if senha:  # Só atualiza se a senha estiver presente e não vazia
+        query_base += ", senha = ?"
+        params.append(senha)
+
+    query_base += " WHERE email = ?"
+    params.append(email)
+
+    try:
+        with sqlite3.connect("database.db") as conn:
+            conn.execute(query_base, params)
+            conn.commit()
+        return jsonify({"mensagem": "Usuário ofertador alterado com sucesso."}), 200
     except Exception as e:
         return jsonify({"erro": str(e)}), 500
 
