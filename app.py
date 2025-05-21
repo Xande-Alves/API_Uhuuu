@@ -241,7 +241,7 @@ def cadastrar_evento():
     idOfertador = dados.get("idOfertador")
 
     
-    if not nome or not logradouro or not numero or not bairro or not cidade or not estado or not email or not telefone or not dataHoraInicio or not dataHoraFim or not descricao or not numeroInteresse or not idOfertador:
+    if not nome or not logradouro or not numero or not bairro or not cidade or not estado or not email or not telefone or not dataHoraInicio or not dataHoraFim or not descricao or not idOfertador:
         return jsonify({"erro": "Todos os campos são obrigatórios"}), 400
 
     with sqlite3.connect("database.db") as conn:
