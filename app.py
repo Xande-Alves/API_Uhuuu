@@ -44,6 +44,7 @@ def init_db():
         conn.execute('''
             CREATE TABLE IF NOT EXISTS EVENTOS(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                idOfertador INTEGER NOT NULL,
                 nome TEXT NOT NULL,
                 dataHoraInicio TEXT NOT NULL,
                 dataHoraFim TEXT NOT NULL,
