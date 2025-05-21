@@ -151,6 +151,62 @@ def listar_offers():
     return jsonify(offers_formatados), 200
 
 
+@app.route("/cadastrados_eventos", methods=["GET"])
+def listar_eventos():
+    with sqlite3.connect("database.db") as conn:
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        eventos = cursor.execute("SELECT * FROM EVENTOS").fetchall()
+        eventos_formatados = []
+
+        for item in eventos:
+            evento_id = item["id"]
+
+            # Buscar fotos
+            fotos = cursor.execute("SELECT foto, legenda FROM FOTOS WHERE evento_id = ?", (evento_id,)).fetchall()
+            lista_foto = [{"foto": foto["foto"], "legenda": foto["legenda"]} for foto in fotos]
+
+            # Buscar atrações
+            atracoes = cursor.execute("SELECT atracao, atracaoDescricao FROM ATRACOES WHERE evento_id = ?", (evento_id,)).fetchall()
+            lista_atracao = [{"atracao": a["atracao"], "atracaoDescricao": a["atracaoDescricao"]} for a in atracoes]
+
+            # Buscar ingressos
+            ingressos = cursor.execute("SELECT ingresso, ingressoDescricao FROM INGRESSOS WHERE evento_id = ?", (evento_id,)).fetchall()
+            lista_ingresso = [{"ingresso": i["ingresso"], "ingressoDescricao": i["ingressoDescricao"]} for i in ingressos]
+
+            # Buscar promoções
+            promocoes = cursor.execute("SELECT promocao, promocaoDescricao FROM PROMOCOES WHERE evento_id = ?", (evento_id,)).fetchall()
+            lista_promocao = [{"promocao": p["promocao"], "promocaoDescricao": p["promocaoDescricao"]} for p in promocoes]
+
+            dicionario_eventos = {
+                "id": item["id"],
+                "idOfertador": item["idOfertador"],
+                "nome": item["nome"],
+                "dataHoraInicio": item["dataHoraInicio"],
+                "dataHoraFim": item["dataHoraFim"],
+                "logradouro": item["logradouro"],
+                "numero": item["numero"],
+                "complemento": item["complemento"],
+                "bairro": item["bairro"],
+                "cidade": item["cidade"],
+                "estado": item["estado"],
+                "email": item["email"],
+                "telefone": item["telefone"],
+                "descricao": item["descricao"],
+                "numeroInteresse": item["numeroInteresse"],
+                "listaFoto": lista_foto,
+                "listaAtracao": lista_atracao,
+                "listaIngresso": lista_ingresso,
+                "listaPromocao": lista_promocao
+            }
+
+            eventos_formatados.append(dicionario_eventos)
+
+    return jsonify(eventos_formatados), 200
+
+
+
 @app.route("/cadastrar_seacher", methods=["POST"])
 def cadastrar_seacher():
     # Capturamos os dados enviados na requisição em formato JSON
