@@ -7,7 +7,7 @@ CORS(app)
 
 
 @app.route('/')
-def vnw():
+def uhuuu():
     return "<h1>COM O UHUUU!!!, SUA DIVERSÃO É GARANTIDA!</h1>"
 
 
@@ -41,6 +41,65 @@ def init_db():
             )
         ''')
 
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS EVENTOS(
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nome TEXT NOT NULL,
+                dataHoraInicio TEXT NOT NULL,
+                dataHoraFim TEXT NOT NULL,
+                logradouro TEXT NOT NULL,
+                numero INTEGER NOT NULL,
+                complemento TEXT,
+                bairro TEXT NOT NULL,
+                cidade TEXT NOT NULL,
+                estado TEXT NOT NULL,
+                email TEXT NOT NULL,
+                telefone TEXT NOT NULL,
+                descricao TEXT NOT NULL,
+                numeroInteresse INTEGER NOT NULL,
+                FOREIGN KEY(idOfertador) REFERENCES USEROFFER(id)
+            )
+        ''')
+
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS FOTOS (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            evento_id INTEGER NOT NULL,
+            foto TEXT,
+            legenda TEXT,
+            FOREIGN KEY(evento_id) REFERENCES EVENTOS(id)
+            )
+        ''')
+
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS ATRACOES (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            evento_id INTEGER NOT NULL,
+            atracao TEXT,
+            atracaoDescricao TEXT,
+            FOREIGN KEY(evento_id) REFERENCES EVENTOS(id)
+            )
+        ''')
+
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS INGRESSOS (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            evento_id INTEGER NOT NULL,
+            ingresso TEXT,
+            ingressoDescricao TEXT,
+            FOREIGN KEY(evento_id) REFERENCES EVENTOS(id)
+            )
+        ''')
+
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS PROMOCOES (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            evento_id INTEGER NOT NULL,
+            promocao TEXT,
+            promocaoDescricao TEXT,
+            FOREIGN KEY(evento_id) REFERENCES EVENTOS(id)
+            )
+        ''')
 
 init_db()
 
@@ -108,10 +167,11 @@ def cadastrar_seacher():
         return jsonify({"erro": "Todos os campos são obrigatórios"}), 400
 
     with sqlite3.connect("database.db") as conn:
-        conn.execute(f"""
-        INSERT INTO USERSEACHER (nome,sobrenome,data_nascimento,email,telefone,senha) 
-        VALUES ("{nome}", "{sobrenome}", "{data_nascimento}", "{email}", "{telefone}", "{senha}")
-        """)
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO USERSEACHER (nome, sobrenome, data_nascimento, email, telefone, senha)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (nome, sobrenome, data_nascimento, email, telefone, senha))
 
     conn.commit()
 
@@ -139,14 +199,98 @@ def cadastrar_offer():
         return jsonify({"erro": "Todos os campos são obrigatórios"}), 400
 
     with sqlite3.connect("database.db") as conn:
-        conn.execute(f"""
-        INSERT INTO USEROFFER (nome,logradouro,numero,complemento,bairro,cidade,estado,email,telefone,senha) 
-        VALUES ("{nome}", "{logradouro}", "{numero}", "{complemento}", "{bairro}", "{cidade}", "{estado}", "{email}", "{telefone}", "{senha}")
-        """)
+        cursor = conn.cursor()
+        cursor.execute("""
+        INSERT INTO USEROFFER (
+            nome, logradouro, numero, complemento, bairro, cidade, estado, email, telefone, senha
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            nome, logradouro, numero, complemento, bairro,
+            cidade, estado, email, telefone, senha
+        ))
 
     conn.commit()
 
     return jsonify({"mensagem": "Usuário buscador cadastrado com sucesso."}), 201
+
+
+@app.route("/cadastrar_evento", methods=["POST"])
+def cadastrar_evento():
+    # Capturamos os dados enviados na requisição em formato JSON
+    dados = request.get_json()
+
+    # Extraímos as informações do JSON recebido
+    nome = dados.get("nome")  
+    dataHoraInicio = dados.get("dataHoraInicio")
+    dataHoraFim = dados.get("dataHoraFim")
+    logradouro = dados.get("logradouro")  
+    numero = dados.get("numero")  
+    complemento = dados.get("complemento")
+    bairro = dados.get("bairro")  
+    cidade = dados.get("cidade") 
+    estado = dados.get("estado")  
+    email = dados.get("email")
+    telefone = dados.get("telefone")  
+    descricao = dados.get("descricao")
+    listaFoto = dados.get("listaFoto", [])
+    listaAtracao = dados.get("listaAtracao", [])
+    listaIngresso = dados.get("listaIngresso", [])
+    listaPromocao = dados.get("listaPromocao", [])
+    numeroInteresse = dados.get("numeroInteresse")
+    idOfertador = dados.get("idOfertador")
+
+    
+    if not nome or not logradouro or not numero or not bairro or not cidade or not estado or not email or not telefone or not dataHoraInicio or not dataHoraFim or not descricao or not numeroInteresse or not idOfertador:
+        return jsonify({"erro": "Todos os campos são obrigatórios"}), 400
+
+    with sqlite3.connect("database.db") as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO EVENTOS (nome, dataHoraInicio, dataHoraFim, logradouro, numero, complemento, bairro, cidade, estado, email, telefone, descricao, numeroInteresse, idOfertador)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            nome, dataHoraInicio, dataHoraFim, logradouro, numero, complemento, bairro,
+            cidade, estado, email, telefone, descricao, numeroInteresse, idOfertador
+        ))
+
+        evento_id = cursor.lastrowid  # pega o ID do evento recém inserido
+
+        for item in listaFoto:
+            foto = item.get("foto")
+            legenda = item.get("legenda")
+            cursor.execute("""
+                INSERT INTO FOTOS (evento_id, foto, legenda)
+                VALUES (?, ?, ?)
+            """, (evento_id, foto, legenda))
+
+        for item in listaAtracao:
+            atracao = item.get("atracao")
+            atracaoDescricao = item.get("atracaoDescricao")
+            cursor.execute("""
+                INSERT INTO ATRACOES (evento_id, atracao, atracaoDescricao)
+                VALUES (?, ?, ?)
+            """, (evento_id, atracao, atracaoDescricao))
+
+        for item in listaIngresso:
+            ingresso = item.get("ingresso")
+            ingressoDescricao = item.get("ingressoDescricao")
+            cursor.execute("""
+                INSERT INTO INGRESSOS (evento_id, ingresso, ingressoDescricao)
+                VALUES (?, ?, ?)
+            """, (evento_id, ingresso, ingressoDescricao))
+
+        for item in listaPromocao:
+            promocao = item.get("promocao")
+            promocaoDescricao = item.get("promocaoDescricao")
+            cursor.execute("""
+                INSERT INTO PROMOCOES (evento_id, promocao, promocaoDescricao)
+                VALUES (?, ?, ?)
+            """, (evento_id, promocao, promocaoDescricao))
+
+
+    conn.commit()
+
+    return jsonify({"mensagem": "Evento cadastrado com sucesso."}), 201
 
 
 @app.route("/atualizar_seacher", methods=["PUT"])
