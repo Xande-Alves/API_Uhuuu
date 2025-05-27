@@ -432,6 +432,85 @@ def atualizar_offer():
         return jsonify({"erro": str(e)}), 500
 
 
+@app.route("/atualizar_evento", methods=["PUT"])
+def atualizar_evento():
+    # Capturamos os dados enviados na requisição em formato JSON
+    dados = request.get_json()
+
+    # Extraímos as informações do JSON recebido
+    id = dados.get("eventoId")
+    nome = dados.get("nome")  
+    dataHoraInicio = dados.get("dataHoraInicio")
+    dataHoraFim = dados.get("dataHoraFim")
+    logradouro = dados.get("logradouro")  
+    numero = dados.get("numero")  
+    complemento = dados.get("complemento")
+    bairro = dados.get("bairro")  
+    cidade = dados.get("cidade") 
+    estado = dados.get("estado")  
+    email = dados.get("email")
+    telefone = dados.get("telefone")  
+    descricao = dados.get("descricao")
+    listaFoto = dados.get("listaFoto", [])
+    listaAtracao = dados.get("listaAtracao", [])
+    listaIngresso = dados.get("listaIngresso", [])
+    listaPromocao = dados.get("listaPromocao", [])
+
+    query_base = """
+    UPDATE EVENTOS SET 
+        nome = ?,
+        dataHoraInicio = ?,
+        dataHoraFim = ?,
+        logradouro = ?, 
+        numero = ?, 
+        complemento = ?,
+        bairro = ?, 
+        cidade = ?, 
+        estado = ?,
+        email = ?, 
+        telefone = ?,
+        descricao = ?
+        WHERE id = ?
+    """
+    params = [nome, dataHoraInicio, dataHoraFim, logradouro, numero, complemento, bairro, cidade, estado, email, telefone, descricao, id]
+
+    try:
+        with sqlite3.connect("database.db") as conn:
+            cursor = conn.cursor()
+            cursor.execute(query_base, params)
+
+            # Fotos
+            cursor.execute("DELETE FROM FOTOS WHERE evento_id = ?", (id,))
+            for item in listaFoto:
+                cursor.execute("INSERT INTO FOTOS (evento_id, foto, legenda) VALUES (?, ?, ?)",
+                            (id, item.get("foto"), item.get("legenda")))
+
+            # Atrações
+            cursor.execute("DELETE FROM ATRACOES WHERE evento_id = ?", (id,))
+            for item in listaAtracao:
+                cursor.execute("INSERT INTO ATRACOES (evento_id, atracao, atracaoDescricao) VALUES (?, ?, ?)",
+                            (id, item.get("atracao"), item.get("atracaoDescricao")))
+
+            # Ingressos
+            cursor.execute("DELETE FROM INGRESSOS WHERE evento_id = ?", (id,))
+            for item in listaIngresso:
+                cursor.execute("INSERT INTO INGRESSOS (evento_id, ingresso, ingressoDescricao) VALUES (?, ?, ?)",
+                            (id, item.get("ingresso"), item.get("ingressoDescricao")))
+
+            # Promoções
+            cursor.execute("DELETE FROM PROMOCOES WHERE evento_id = ?", (id,))
+            for item in listaPromocao:
+                cursor.execute("INSERT INTO PROMOCOES (evento_id, promocao, promocaoDescricao) VALUES (?, ?, ?)",
+                            (id, item.get("promocao"), item.get("promocaoDescricao")))
+
+            conn.commit()
+
+        return jsonify({"mensagem": "Evento alterado com sucesso."}), 200
+        
+    except Exception as e:
+        return jsonify({"erro": str(e)}), 500
+
+
 @app.route("/deletar_seacher", methods=["DELETE"])
 def deletar_seacher():
     # Capturamos os dados enviados na requisição em formato JSON
