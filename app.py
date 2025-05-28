@@ -544,6 +544,31 @@ def deletar_offer():
     except Exception as e:
         return jsonify({"erro": str(e)}), 500
 
+
+@app.route("/deletar_evento", methods=["DELETE"])
+def deletar_evento():
+    # Capturamos os dados enviados na requisição em formato JSON
+    dados = request.get_json()
+
+    # Extraímos as informações do JSON recebido  
+    id = dados.get("eventoId")  
+
+    try:
+        with sqlite3.connect("database.db") as conn:
+            conn.execute("DELETE FROM EVENTOS WHERE id = ?", (id,))
+            # Fotos
+            conn.execute("DELETE FROM FOTOS WHERE evento_id = ?", (id,))
+            # Atrações
+            conn.execute("DELETE FROM ATRACOES WHERE evento_id = ?", (id,))
+            # Ingressos
+            conn.execute("DELETE FROM INGRESSOS WHERE evento_id = ?", (id,))
+            # Promoções
+            conn.execute("DELETE FROM PROMOCOES WHERE evento_id = ?", (id,))
+            conn.commit()
+        return jsonify({"mensagem": "Evento excluído com sucesso."}), 200
+    except Exception as e:
+        return jsonify({"erro": str(e)}), 500
+
     
 
 if __name__ == "__main__":
