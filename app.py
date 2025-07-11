@@ -358,6 +358,7 @@ def atualizar_seacher():
     dados = request.get_json()
 
     # Extraímos as informações do JSON recebido
+    fotoPerfil = dados.get("fotoPerfil")
     nome = dados.get("nome")  
     sobrenome = dados.get("sobrenome")  
     data_nascimento = dados.get("data_nascimento")  
@@ -367,12 +368,13 @@ def atualizar_seacher():
 
     query_base = """
     UPDATE USERSEACHER SET 
+        fotoPerfil = ?,
         nome = ?, 
         sobrenome = ?, 
         data_nascimento = ?, 
         telefone = ?
     """
-    params = [nome, sobrenome, data_nascimento, telefone]
+    params = [fotoPerfil, nome, sobrenome, data_nascimento, telefone]
 
     if senha:  # Só atualiza se a senha estiver presente e não vazia
         query_base += ", senha = ?"
