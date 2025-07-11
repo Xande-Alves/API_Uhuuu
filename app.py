@@ -16,6 +16,7 @@ def init_db():
         conn.execute('''
             CREATE TABLE IF NOT EXISTS USERSEACHER(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                fotoPerfil TEXT,
                 nome TEXT NOT NULL,
                 sobrenome TEXT NOT NULL,
                 data_nascimento TEXT NOT NULL,
@@ -114,12 +115,13 @@ def listar_seachers():
         for item in seachers:
             dicionario_seachers = {
                 "id": item[0],
-                "nome": item[1],
-                "sobrenome": item[2],
-                "data_nascimento": item[3],
-                "email": item[4],
-                "telefone": item[5],
-                "senha": item[6]
+                "fotoPerfil": item[1],
+                "nome": item[2],
+                "sobrenome": item[3],
+                "data_nascimento": item[4],
+                "email": item[5],
+                "telefone": item[6],
+                "senha": item[7]
             }
             seachers_formatados.append(dicionario_seachers)
 
@@ -213,6 +215,7 @@ def cadastrar_seacher():
     dados = request.get_json()
 
     # Extraímos as informações do JSON recebido
+    fotoPerfil = dados.get("fotoPerfil")
     nome = dados.get("nome")  
     sobrenome = dados.get("sobrenome")  
     data_nascimento = dados.get("data_nascimento")  
@@ -221,14 +224,14 @@ def cadastrar_seacher():
     senha = dados.get("senha")  
 
     if not nome or not sobrenome or not data_nascimento or not email or not telefone or not senha:
-        return jsonify({"erro": "Todos os campos são obrigatórios"}), 400
+        return jsonify({"erro": "Falta preencher campos obrigatórios"}), 400
 
     with sqlite3.connect("database.db") as conn:
         cursor = conn.cursor()
         cursor.execute("""
-            INSERT INTO USERSEACHER (nome, sobrenome, data_nascimento, email, telefone, senha)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """, (nome, sobrenome, data_nascimento, email, telefone, senha))
+            INSERT INTO USERSEACHER (fotoPerfil, nome, sobrenome, data_nascimento, email, telefone, senha)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (fotoPerfil, nome, sobrenome, data_nascimento, email, telefone, senha))
 
     conn.commit()
 
