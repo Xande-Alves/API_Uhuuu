@@ -475,7 +475,7 @@ def atualizar_evento():
         estado = ?,
         email = ?, 
         telefone = ?,
-        descricao = ?
+        descricao = ?,
         numeroInteresse = ?
         WHERE id = ?
     """
