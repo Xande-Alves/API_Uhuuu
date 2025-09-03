@@ -456,6 +456,7 @@ def atualizar_evento():
     email = dados.get("email")
     telefone = dados.get("telefone")  
     descricao = dados.get("descricao")
+    numeroInteresse = dados.get("numeroInteresse", 0)
     listaFoto = dados.get("listaFoto", [])
     listaAtracao = dados.get("listaAtracao", [])
     listaIngresso = dados.get("listaIngresso", [])
@@ -475,9 +476,10 @@ def atualizar_evento():
         email = ?, 
         telefone = ?,
         descricao = ?
+        numeroInteresse = ?
         WHERE id = ?
     """
-    params = [nome, dataHoraInicio, dataHoraFim, logradouro, numero, complemento, bairro, cidade, estado, email, telefone, descricao, id]
+    params = [nome, dataHoraInicio, dataHoraFim, logradouro, numero, complemento, bairro, cidade, estado, email, telefone, descricao, numeroInteresse, id]
 
     try:
         with sqlite3.connect("database.db") as conn:
