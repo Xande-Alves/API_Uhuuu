@@ -103,6 +103,19 @@ def init_db():
             )
         ''')
 
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS MENSAGENS (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                foto TEXT,
+                nome TEXT NOT NULL,
+                mensagem TEXT NOT NULL,
+                origem TEXT NOT NULL,
+                dataHoraMensagem TEXT NOT NULL,
+                idCriador INTEGER NOT NULL
+            )
+        ''')
+
+
 init_db()
 
 
@@ -207,6 +220,26 @@ def listar_eventos():
 
     return jsonify(eventos_formatados), 200
 
+
+@app.route("/mensagens", methods=["GET"])
+def listar_mensagens():
+    with sqlite3.connect("database.db") as conn:
+        mensagens = conn.execute("SELECT * FROM MENSAGENS").fetchall()
+        mensagens_formatadas = []
+
+        for item in mensagens:
+            dicionario_mensagem = {
+                "id": item[0],
+                "foto": item[1],
+                "nome": item[2],
+                "mensagem": item[3],
+                "origem": item[4],
+                "dataHoraMensagem": item[5],
+                "idCriador": item[6]
+            }
+            mensagens_formatadas.append(dicionario_mensagem)
+
+    return jsonify(mensagens_formatadas), 200
 
 
 @app.route("/cadastrar_seacher", methods=["POST"])
@@ -351,6 +384,35 @@ def cadastrar_evento():
     conn.commit()
 
     return jsonify({"mensagem": "Evento cadastrado com sucesso."}), 201
+
+
+@app.route("/cadastrar_mensagem", methods=["POST"])
+def cadastrar_mensagem():
+    # Captura os dados enviados na requisição em formato JSON
+    dados = request.get_json()
+
+    # Extrai as informações do JSON recebido
+    foto = dados.get("foto")
+    nome = dados.get("nome")
+    mensagem = dados.get("mensagem")
+    origem = dados.get("origem")
+    dataHoraMensagem = dados.get("dataHoraMensagem")
+    idCriador = dados.get("idCriador")
+
+    # Valida os campos obrigatórios
+    if not nome or not mensagem or not origem or not dataHoraMensagem or not idCriador:
+        return jsonify({"erro": "Falta preencher o campo da mensagem"}), 400
+
+    with sqlite3.connect("database.db") as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO MENSAGENS (foto, nome, mensagem, origem, dataHoraMensagem, idCriador)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (foto, nome, mensagem, origem, dataHoraMensagem, idCriador))
+        conn.commit()
+
+    return jsonify({"mensagem": "Mensagem cadastrada com sucesso."}), 201
+
 
 
 @app.route("/atualizar_seacher", methods=["PUT"])
