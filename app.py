@@ -106,12 +106,13 @@ def init_db():
         conn.execute('''
             CREATE TABLE IF NOT EXISTS MENSAGENS (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                idCriador INTEGER NOT NULL,
                 foto TEXT,
                 nome TEXT NOT NULL,
                 mensagem TEXT NOT NULL,
                 origem TEXT NOT NULL,
                 dataHoraMensagem TEXT NOT NULL,
-                idCriador INTEGER NOT NULL
+                FOREIGN KEY(idCriador) REFERENCES USERSEACHER(id)
             )
         ''')
 
