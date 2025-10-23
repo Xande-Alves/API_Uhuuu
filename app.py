@@ -422,11 +422,12 @@ def cadastrar_mensagem():
             idCriador = int(idCriador)
 
         query = """
-            INSERT INTO MENSAGENS (foto, nome, mensagem, origem, dataHoraMensagem, idCriador)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """
+                INSERT INTO MENSAGENS (idCriador, foto, nome, mensagem, origem, dataHoraMensagem)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """
 
-        valores = (foto, nome, mensagem, origem, dataHoraMensagem, idCriador)
+        valores = (idCriador, foto, nome, mensagem, origem, dataHoraMensagem)
+
 
         with sqlite3.connect("database.db") as conn:
             cursor = conn.cursor()
