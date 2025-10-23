@@ -387,32 +387,74 @@ def cadastrar_evento():
     return jsonify({"mensagem": "Evento cadastrado com sucesso."}), 201
 
 
+
 @app.route("/cadastrar_mensagem", methods=["POST"])
 def cadastrar_mensagem():
-    # Captura os dados enviados na requisição em formato JSON
-    dados = request.get_json()
+    try:
+        # 1️⃣ Captura o JSON exatamente como enviado
+        dados = request.get_json(force=True)
+        print("📥 JSON recebido:", dados)
 
-    # Extrai as informações do JSON recebido
-    foto = dados.get("foto")
-    nome = dados.get("nome")
-    mensagem = dados.get("mensagem")
-    origem = dados.get("origem")
-    dataHoraMensagem = dados.get("dataHoraMensagem")
-    idCriador = dados.get("idCriador")
+        # 2️⃣ Extrai os campos explicitamente pelo nome (sem depender da ordem)
+        foto = dados.get("foto")
+        nome = dados.get("nome")
+        mensagem = dados.get("mensagem")
+        origem = dados.get("origem")
+        dataHoraMensagem = dados.get("dataHoraMensagem")
+        idCriador = dados.get("idCriador")
 
-    # Valida os campos obrigatórios
-    if not nome or not mensagem or not origem or not dataHoraMensagem or not idCriador:
-        return jsonify({"erro": "Falta preencher o campo da mensagem"}), 400
+        # 3️⃣ Validação detalhada com mensagens específicas
+        campos_faltando = []
+        if not nome:
+            campos_faltando.append("nome")
+        if not mensagem:
+            campos_faltando.append("mensagem")
+        if not origem:
+            campos_faltando.append("origem")
+        if not dataHoraMensagem:
+            campos_faltando.append("dataHoraMensagem")
+        if not idCriador:
+            campos_faltando.append("idCriador")
 
-    with sqlite3.connect("database.db") as conn:
-        cursor = conn.cursor()
-        cursor.execute("""
+        if campos_faltando:
+            return jsonify({
+                "erro": f"Campos obrigatórios ausentes: {', '.join(campos_faltando)}"
+            }), 400
+
+        # 4️⃣ Converte tipos para garantir integridade no banco
+        if isinstance(idCriador, str) and idCriador.isdigit():
+            idCriador = int(idCriador)
+
+        # 5️⃣ Inserção segura — os nomes das colunas são explícitos
+        query = """
             INSERT INTO MENSAGENS (foto, nome, mensagem, origem, dataHoraMensagem, idCriador)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """, (foto, nome, mensagem, origem, dataHoraMensagem, idCriador))
-        conn.commit()
+            VALUES (:foto, :nome, :mensagem, :origem, :dataHoraMensagem, :idCriador)
+        """
 
-    return jsonify({"mensagem": "Mensagem cadastrada com sucesso."}), 201
+        valores = {
+            "foto": foto,
+            "nome": nome,
+            "mensagem": mensagem,
+            "origem": origem,
+            "dataHoraMensagem": dataHoraMensagem,
+            "idCriador": idCriador,
+        }
+
+        with sqlite3.connect("database.db") as conn:
+            cursor = conn.cursor()
+            cursor.execute(query, valores)
+            conn.commit()
+
+        # 6️⃣ Retorna resposta confirmando e ecoando o conteúdo inserido
+        return jsonify({
+            "mensagem": "Mensagem cadastrada com sucesso.",
+            "dados_recebidos": valores
+        }), 201
+
+    except Exception as e:
+        print("❌ Erro ao cadastrar mensagem:", str(e))
+        return jsonify({"erro": f"Erro interno no servidor: {str(e)}"}), 500
+
 
 
 
