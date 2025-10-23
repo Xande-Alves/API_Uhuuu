@@ -391,11 +391,9 @@ def cadastrar_evento():
 @app.route("/cadastrar_mensagem", methods=["POST"])
 def cadastrar_mensagem():
     try:
-        # 1️⃣ Captura o JSON exatamente como enviado
         dados = request.get_json(force=True)
         print("📥 JSON recebido:", dados)
 
-        # 2️⃣ Extrai os campos explicitamente pelo nome (sem depender da ordem)
         foto = dados.get("foto")
         nome = dados.get("nome")
         mensagem = dados.get("mensagem")
@@ -403,7 +401,6 @@ def cadastrar_mensagem():
         dataHoraMensagem = dados.get("dataHoraMensagem")
         idCriador = dados.get("idCriador")
 
-        # 3️⃣ Validação detalhada com mensagens específicas
         campos_faltando = []
         if not nome:
             campos_faltando.append("nome")
@@ -421,40 +418,36 @@ def cadastrar_mensagem():
                 "erro": f"Campos obrigatórios ausentes: {', '.join(campos_faltando)}"
             }), 400
 
-        # 4️⃣ Converte tipos para garantir integridade no banco
         if isinstance(idCriador, str) and idCriador.isdigit():
             idCriador = int(idCriador)
 
-        # 5️⃣ Inserção segura — os nomes das colunas são explícitos
         query = """
             INSERT INTO MENSAGENS (foto, nome, mensagem, origem, dataHoraMensagem, idCriador)
-            VALUES (:foto, :nome, :mensagem, :origem, :dataHoraMensagem, :idCriador)
+            VALUES (?, ?, ?, ?, ?, ?)
         """
 
-        valores = {
-            "foto": foto,
-            "nome": nome,
-            "mensagem": mensagem,
-            "origem": origem,
-            "dataHoraMensagem": dataHoraMensagem,
-            "idCriador": idCriador,
-        }
+        valores = (foto, nome, mensagem, origem, dataHoraMensagem, idCriador)
 
         with sqlite3.connect("database.db") as conn:
             cursor = conn.cursor()
             cursor.execute(query, valores)
             conn.commit()
 
-        # 6️⃣ Retorna resposta confirmando e ecoando o conteúdo inserido
         return jsonify({
             "mensagem": "Mensagem cadastrada com sucesso.",
-            "dados_recebidos": valores
+            "dados_recebidos": {
+                "foto": foto,
+                "nome": nome,
+                "mensagem": mensagem,
+                "origem": origem,
+                "dataHoraMensagem": dataHoraMensagem,
+                "idCriador": idCriador,
+            }
         }), 201
 
     except Exception as e:
         print("❌ Erro ao cadastrar mensagem:", str(e))
         return jsonify({"erro": f"Erro interno no servidor: {str(e)}"}), 500
-
 
 
 
