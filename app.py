@@ -225,22 +225,13 @@ def listar_eventos():
 @app.route("/mensagens", methods=["GET"])
 def listar_mensagens():
     with sqlite3.connect("database.db") as conn:
-        mensagens = conn.execute("SELECT * FROM MENSAGENS").fetchall()
-        mensagens_formatadas = []
+        conn.row_factory = sqlite3.Row  # permite acessar como dicionário
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM MENSAGENS")
+        mensagens = [dict(row) for row in cursor.fetchall()]
 
-        for item in mensagens:
-            dicionario_mensagem = {
-                "id": item[0],
-                "foto": item[1],
-                "nome": item[2],
-                "mensagem": item[3],
-                "origem": item[4],
-                "dataHoraMensagem": item[5],
-                "idCriador": item[6]
-            }
-            mensagens_formatadas.append(dicionario_mensagem)
+    return jsonify(mensagens), 200
 
-    return jsonify(mensagens_formatadas), 200
 
 
 @app.route("/cadastrar_seacher", methods=["POST"])
