@@ -1,3 +1,4 @@
+import requests
 from flask import Flask, request, jsonify
 import sqlite3
 from flask_cors import CORS
@@ -120,6 +121,30 @@ def init_db():
 init_db()
 
 
+@app.route("/geocode")
+def geocode():
+    endereco = request.args.get("q")
+
+    if not endereco:
+        return jsonify({"error": "Nenhum endereço recebido"}), 400
+
+    url = "https://nominatim.openstreetmap.org/search"
+    params = {
+        "q": endereco,
+        "format": "json",
+        "addressdetails": 1,
+        "limit": 1
+    }
+
+    headers = {
+        "User-Agent": "UhuuuApp/1.0"
+    }
+
+    r = requests.get(url, params=params, headers=headers)
+
+    return jsonify(r.json())
+
+
 @app.route("/cadastrados_seachers", methods=["GET"])
 def listar_seachers():
     with sqlite3.connect("database.db") as conn:
@@ -172,7 +197,7 @@ def listar_eventos():
     with sqlite3.connect("database.db") as conn:
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
-        
+
         eventos = cursor.execute("SELECT * FROM EVENTOS").fetchall()
         eventos_formatados = []
 
@@ -180,20 +205,28 @@ def listar_eventos():
             evento_id = item["id"]
 
             # Buscar fotos
-            fotos = cursor.execute("SELECT foto, legenda FROM FOTOS WHERE evento_id = ?", (evento_id,)).fetchall()
-            lista_foto = [{"foto": foto["foto"], "legenda": foto["legenda"]} for foto in fotos]
+            fotos = cursor.execute(
+                "SELECT foto, legenda FROM FOTOS WHERE evento_id = ?", (evento_id,)).fetchall()
+            lista_foto = [{"foto": foto["foto"],
+                           "legenda": foto["legenda"]} for foto in fotos]
 
             # Buscar atrações
-            atracoes = cursor.execute("SELECT atracao, atracaoDescricao FROM ATRACOES WHERE evento_id = ?", (evento_id,)).fetchall()
-            lista_atracao = [{"atracao": a["atracao"], "atracaoDescricao": a["atracaoDescricao"]} for a in atracoes]
+            atracoes = cursor.execute(
+                "SELECT atracao, atracaoDescricao FROM ATRACOES WHERE evento_id = ?", (evento_id,)).fetchall()
+            lista_atracao = [
+                {"atracao": a["atracao"], "atracaoDescricao": a["atracaoDescricao"]} for a in atracoes]
 
             # Buscar ingressos
-            ingressos = cursor.execute("SELECT ingresso, ingressoDescricao FROM INGRESSOS WHERE evento_id = ?", (evento_id,)).fetchall()
-            lista_ingresso = [{"ingresso": i["ingresso"], "ingressoDescricao": i["ingressoDescricao"]} for i in ingressos]
+            ingressos = cursor.execute(
+                "SELECT ingresso, ingressoDescricao FROM INGRESSOS WHERE evento_id = ?", (evento_id,)).fetchall()
+            lista_ingresso = [{"ingresso": i["ingresso"],
+                               "ingressoDescricao": i["ingressoDescricao"]} for i in ingressos]
 
             # Buscar promoções
-            promocoes = cursor.execute("SELECT promocao, promocaoDescricao FROM PROMOCOES WHERE evento_id = ?", (evento_id,)).fetchall()
-            lista_promocao = [{"promocao": p["promocao"], "promocaoDescricao": p["promocaoDescricao"]} for p in promocoes]
+            promocoes = cursor.execute(
+                "SELECT promocao, promocaoDescricao FROM PROMOCOES WHERE evento_id = ?", (evento_id,)).fetchall()
+            lista_promocao = [{"promocao": p["promocao"],
+                               "promocaoDescricao": p["promocaoDescricao"]} for p in promocoes]
 
             dicionario_eventos = {
                 "id": item["id"],
@@ -233,7 +266,6 @@ def listar_mensagens():
     return jsonify(mensagens), 200
 
 
-
 @app.route("/cadastrar_seacher", methods=["POST"])
 def cadastrar_seacher():
     # Capturamos os dados enviados na requisição em formato JSON
@@ -241,12 +273,12 @@ def cadastrar_seacher():
 
     # Extraímos as informações do JSON recebido
     fotoPerfil = dados.get("fotoPerfil")
-    nome = dados.get("nome")  
-    sobrenome = dados.get("sobrenome")  
-    data_nascimento = dados.get("data_nascimento")  
+    nome = dados.get("nome")
+    sobrenome = dados.get("sobrenome")
+    data_nascimento = dados.get("data_nascimento")
     email = dados.get("email")
-    telefone = dados.get("telefone")  
-    senha = dados.get("senha")  
+    telefone = dados.get("telefone")
+    senha = dados.get("senha")
 
     if not nome or not sobrenome or not data_nascimento or not email or not telefone or not senha:
         return jsonify({"erro": "Falta preencher campos obrigatórios"}), 400
@@ -269,16 +301,16 @@ def cadastrar_offer():
     dados = request.get_json()
 
     # Extraímos as informações do JSON recebido
-    nome = dados.get("nome")  
-    logradouro = dados.get("logradouro")  
-    numero = dados.get("numero")  
+    nome = dados.get("nome")
+    logradouro = dados.get("logradouro")
+    numero = dados.get("numero")
     complemento = dados.get("complemento")
-    bairro = dados.get("bairro")  
-    cidade = dados.get("cidade") 
-    estado = dados.get("estado")  
+    bairro = dados.get("bairro")
+    cidade = dados.get("cidade")
+    estado = dados.get("estado")
     email = dados.get("email")
-    telefone = dados.get("telefone")  
-    senha = dados.get("senha") 
+    telefone = dados.get("telefone")
+    senha = dados.get("senha")
 
     if not nome or not logradouro or not numero or not bairro or not cidade or not estado or not email or not telefone or not senha:
         return jsonify({"erro": "Todos os campos são obrigatórios"}), 400
@@ -305,17 +337,17 @@ def cadastrar_evento():
     dados = request.get_json()
 
     # Extraímos as informações do JSON recebido
-    nome = dados.get("nome")  
+    nome = dados.get("nome")
     dataHoraInicio = dados.get("dataHoraInicio")
     dataHoraFim = dados.get("dataHoraFim")
-    logradouro = dados.get("logradouro")  
-    numero = dados.get("numero")  
+    logradouro = dados.get("logradouro")
+    numero = dados.get("numero")
     complemento = dados.get("complemento")
-    bairro = dados.get("bairro")  
-    cidade = dados.get("cidade") 
-    estado = dados.get("estado")  
+    bairro = dados.get("bairro")
+    cidade = dados.get("cidade")
+    estado = dados.get("estado")
     email = dados.get("email")
-    telefone = dados.get("telefone")  
+    telefone = dados.get("telefone")
     descricao = dados.get("descricao")
     listaFoto = dados.get("listaFoto", [])
     listaAtracao = dados.get("listaAtracao", [])
@@ -324,7 +356,6 @@ def cadastrar_evento():
     numeroInteresse = dados.get("numeroInteresse")
     idOfertador = dados.get("idOfertador")
 
-    
     if not nome or not logradouro or not numero or not bairro or not cidade or not estado or not email or not telefone or not dataHoraInicio or not dataHoraFim or not descricao or not idOfertador:
         return jsonify({"erro": "Todos os campos são obrigatórios"}), 400
 
@@ -372,11 +403,9 @@ def cadastrar_evento():
                 VALUES (?, ?, ?)
             """, (evento_id, promocao, promocaoDescricao))
 
-
     conn.commit()
 
     return jsonify({"mensagem": "Evento cadastrado com sucesso."}), 201
-
 
 
 @app.route("/cadastrar_mensagem", methods=["POST"])
@@ -419,7 +448,6 @@ def cadastrar_mensagem():
 
         valores = (idCriador, foto, nome, mensagem, origem, dataHoraMensagem)
 
-
         with sqlite3.connect("database.db") as conn:
             cursor = conn.cursor()
             cursor.execute(query, valores)
@@ -442,18 +470,17 @@ def cadastrar_mensagem():
         return jsonify({"erro": f"Erro interno no servidor: {str(e)}"}), 500
 
 
-
 @app.route("/atualizar_seacher", methods=["PUT"])
 def atualizar_seacher():
     dados = request.get_json()
 
     # Extraímos as informações do JSON recebido
     fotoPerfil = dados.get("fotoPerfil")
-    nome = dados.get("nome")  
-    sobrenome = dados.get("sobrenome")  
-    data_nascimento = dados.get("data_nascimento")  
+    nome = dados.get("nome")
+    sobrenome = dados.get("sobrenome")
+    data_nascimento = dados.get("data_nascimento")
     email = dados.get("email")
-    telefone = dados.get("telefone")  
+    telefone = dados.get("telefone")
     senha = dados.get("senha")  # pode ser None ou ""
 
     query_base = """
@@ -487,16 +514,16 @@ def atualizar_offer():
     dados = request.get_json()
 
     # Extraímos as informações do JSON recebido
-    nome = dados.get("nome")  
-    logradouro = dados.get("logradouro")  
-    numero = dados.get("numero")  
+    nome = dados.get("nome")
+    logradouro = dados.get("logradouro")
+    numero = dados.get("numero")
     complemento = dados.get("complemento")
-    bairro = dados.get("bairro")  
-    cidade = dados.get("cidade") 
-    estado = dados.get("estado")  
+    bairro = dados.get("bairro")
+    cidade = dados.get("cidade")
+    estado = dados.get("estado")
     email = dados.get("email")
-    telefone = dados.get("telefone")  
-    senha = dados.get("senha") # pode ser None ou ""
+    telefone = dados.get("telefone")
+    senha = dados.get("senha")  # pode ser None ou ""
 
     query_base = """
     UPDATE USEROFFER SET 
@@ -509,7 +536,8 @@ def atualizar_offer():
         estado = ?, 
         telefone = ?
     """
-    params = [nome, logradouro, numero, complemento, bairro, cidade, estado, telefone]
+    params = [nome, logradouro, numero, complemento,
+              bairro, cidade, estado, telefone]
 
     if senha:  # Só atualiza se a senha estiver presente e não vazia
         query_base += ", senha = ?"
@@ -534,17 +562,17 @@ def atualizar_evento():
 
     # Extraímos as informações do JSON recebido
     id = dados.get("eventoId")
-    nome = dados.get("nome")  
+    nome = dados.get("nome")
     dataHoraInicio = dados.get("dataHoraInicio")
     dataHoraFim = dados.get("dataHoraFim")
-    logradouro = dados.get("logradouro")  
-    numero = dados.get("numero")  
+    logradouro = dados.get("logradouro")
+    numero = dados.get("numero")
     complemento = dados.get("complemento")
-    bairro = dados.get("bairro")  
-    cidade = dados.get("cidade") 
-    estado = dados.get("estado")  
+    bairro = dados.get("bairro")
+    cidade = dados.get("cidade")
+    estado = dados.get("estado")
     email = dados.get("email")
-    telefone = dados.get("telefone")  
+    telefone = dados.get("telefone")
     descricao = dados.get("descricao")
     numeroInteresse = dados.get("numeroInteresse", 0)
     listaFoto = dados.get("listaFoto", [])
@@ -569,7 +597,8 @@ def atualizar_evento():
         numeroInteresse = ?
         WHERE id = ?
     """
-    params = [nome, dataHoraInicio, dataHoraFim, logradouro, numero, complemento, bairro, cidade, estado, email, telefone, descricao, numeroInteresse, id]
+    params = [nome, dataHoraInicio, dataHoraFim, logradouro, numero, complemento,
+              bairro, cidade, estado, email, telefone, descricao, numeroInteresse, id]
 
     try:
         with sqlite3.connect("database.db") as conn:
@@ -580,30 +609,30 @@ def atualizar_evento():
             cursor.execute("DELETE FROM FOTOS WHERE evento_id = ?", (id,))
             for item in listaFoto:
                 cursor.execute("INSERT INTO FOTOS (evento_id, foto, legenda) VALUES (?, ?, ?)",
-                            (id, item.get("foto"), item.get("legenda")))
+                               (id, item.get("foto"), item.get("legenda")))
 
             # Atrações
             cursor.execute("DELETE FROM ATRACOES WHERE evento_id = ?", (id,))
             for item in listaAtracao:
                 cursor.execute("INSERT INTO ATRACOES (evento_id, atracao, atracaoDescricao) VALUES (?, ?, ?)",
-                            (id, item.get("atracao"), item.get("atracaoDescricao")))
+                               (id, item.get("atracao"), item.get("atracaoDescricao")))
 
             # Ingressos
             cursor.execute("DELETE FROM INGRESSOS WHERE evento_id = ?", (id,))
             for item in listaIngresso:
                 cursor.execute("INSERT INTO INGRESSOS (evento_id, ingresso, ingressoDescricao) VALUES (?, ?, ?)",
-                            (id, item.get("ingresso"), item.get("ingressoDescricao")))
+                               (id, item.get("ingresso"), item.get("ingressoDescricao")))
 
             # Promoções
             cursor.execute("DELETE FROM PROMOCOES WHERE evento_id = ?", (id,))
             for item in listaPromocao:
                 cursor.execute("INSERT INTO PROMOCOES (evento_id, promocao, promocaoDescricao) VALUES (?, ?, ?)",
-                            (id, item.get("promocao"), item.get("promocaoDescricao")))
+                               (id, item.get("promocao"), item.get("promocaoDescricao")))
 
             conn.commit()
 
         return jsonify({"mensagem": "Evento alterado com sucesso."}), 200
-        
+
     except Exception as e:
         return jsonify({"erro": str(e)}), 500
 
@@ -613,8 +642,8 @@ def deletar_seacher():
     # Capturamos os dados enviados na requisição em formato JSON
     dados = request.get_json()
 
-    # Extraímos as informações do JSON recebido  
-    email = dados.get("email")  
+    # Extraímos as informações do JSON recebido
+    email = dados.get("email")
 
     try:
         with sqlite3.connect("database.db") as conn:
@@ -630,8 +659,8 @@ def deletar_offer():
     # Capturamos os dados enviados na requisição em formato JSON
     dados = request.get_json()
 
-    # Extraímos as informações do JSON recebido  
-    email = dados.get("email")  
+    # Extraímos as informações do JSON recebido
+    email = dados.get("email")
 
     try:
         with sqlite3.connect("database.db") as conn:
@@ -647,8 +676,8 @@ def deletar_evento():
     # Capturamos os dados enviados na requisição em formato JSON
     dados = request.get_json()
 
-    # Extraímos as informações do JSON recebido  
-    id = dados.get("eventoId")  
+    # Extraímos as informações do JSON recebido
+    id = dados.get("eventoId")
 
     try:
         with sqlite3.connect("database.db") as conn:
@@ -666,7 +695,6 @@ def deletar_evento():
     except Exception as e:
         return jsonify({"erro": str(e)}), 500
 
-    
 
 if __name__ == "__main__":
     app.run(debug=True)
